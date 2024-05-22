@@ -1,0 +1,83 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+
+#define MAX 100
+
+typedef struct {
+    char *items[MAX];
+    int top;
+} Stack;
+
+// Stack operations
+void push(Stack *stack, char *value) {
+    if (stack->top == MAX - 1) {
+        printf("Stack overflow\n");
+        return;
+    }
+    stack->items[++stack->top] = value;
+}
+
+char *pop(Stack *stack) {
+    if (stack->top == -1) {
+        printf("Stack underflow\n");
+        return NULL;
+    }
+    return stack->items[stack->top--];
+}
+
+// Check if a character is an operator
+int isOperator(char ch) {
+    return (ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '^');
+}
+
+// Convert postfix to infix
+void postfixToInfix(char *postfix, char *infix) {
+    Stack stack;
+    stack.top = -1;
+    int len = strlen(postfix);
+
+    for (int i = 0; i < len; i++) {
+        if (isalnum(postfix[i])) { // Operand
+            char *operand = (char *)malloc(2 * sizeof(char));
+            operand[0] = postfix[i];
+            operand[1] = '\0';
+            push(&stack, operand);
+        } else if (isOperator(postfix[i])) { // Operator
+            char *op2 = pop(&stack);
+            char *op1 = pop(&stack);
+            
+            int size = strlen(op1) + strlen(op2) + 4; // size of op1 + op2 + operator + parentheses + null terminator
+            char *expression = (char *)malloc(size * sizeof(char));
+            
+            snprintf(expression, size, "(%s%c%s)", op1, postfix[i], op2);
+            
+            push(&stack, expression);
+            
+            free(op1);
+            free(op2);
+        }
+    }
+
+    strcpy(infix, pop(&stack));
+}
+
+int main() {
+    char postfix[MAX], infix[MAX];
+
+    printf("Enter a postfix expression: ");
+    fgets(postfix, MAX, stdin);
+
+    // Remove newline character if present
+    size_t len = strlen(postfix);
+    if (len > 0 && postfix[len - 1] == '\n') {
+        postfix[len - 1] = '\0';
+    }
+
+    postfixToInfix(postfix, infix);
+
+    printf("Infix expression: %s\n", infix);
+
+    return 0;
+}
